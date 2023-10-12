@@ -6,7 +6,7 @@ import Header from './components/Header.jsx';
 
 function App() {
   return (
-    <Container maxW="620px" height="90vh" style={{ border: '1px solid white' }}>
+    <Container maxW="620px" height="90vh">
       <Header />
       <Routes>
         <Route path="/:username" element={<UserPage />} />
