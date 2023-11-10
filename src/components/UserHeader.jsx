@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Link,
   Menu,
@@ -14,9 +15,64 @@ import {
 import { BsInstagram } from 'react-icons/bs';
 import { CgMoreO } from 'react-icons/cg';
 import { useToast } from '@chakra-ui/react';
+import { useRecoilValue } from 'recoil';
+import userAtom from '../atoms/userAtom';
+import { Link as RouterLink } from 'react-router-dom';
+import { useState } from 'react';
+import useShowToast from '../hooks/useShowToast';
 
-const UserHeader = () => {
+const UserHeader = ({ user }) => {
+  // user is the current user page that we are lookin in - got it from the server thru petition
   const toast = useToast();
+  const currentUser = useRecoilValue(userAtom); // this is the logged in user - localStorage obtained from
+  const [following, setFollowing] = useState(
+    user.followers.includes(currentUser?._id)
+  );
+  const showToast = useShowToast();
+  const [updating, setUpdating] = useState(false);
+
+  const handleFollowUnfollow = async () => {
+    if (!currentUser) {
+      showToast('Error', 'please login to follow', 'error');
+      return;
+    }
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/users/follow/${user._id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        showToast('Error', data.error, 'error');
+        return;
+      }
+
+      if (following) {
+        showToast(
+          'Success',
+          `Unfollowed ${user.username}successfully`,
+          'success'
+        );
+        user.followers.pop(); // simulating the sustraction of a follower to the current render state
+      } else {
+        showToast(
+          'Success',
+          `Followed ${user.username}successfully`,
+          'success'
+        );
+        user.followers.push(currentUser._id); // simulating the adition of a follower to the current render state
+      }
+      setFollowing(!following);
+    } catch (error) {
+      showToast('Error', error, 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const copyUrl = () => {
     const currentUrl = window.location.href;
     navigator.clipboard.writeText(currentUrl).then(() => {
@@ -40,10 +96,10 @@ const UserHeader = () => {
             }}
             fontWeight={'bold'}
           >
-            Mark Zuckerberg
+            {user.name}
           </Text>
           <Flex gap={2} alignItems={'center'}>
-            <Text fontSize={'sm'}>Mark Zuckerberg</Text>
+            <Text fontSize={'sm'}>{user.username}</Text>
             <Text
               fontSize={'xs'}
               bg={'gray.dark'}
@@ -56,17 +112,39 @@ const UserHeader = () => {
           </Flex>
         </Box>
         <Box>
-          <Avatar
-            name="Mark Zuckerberg"
-            src="/zuck-avatar.png"
-            size={{ base: 'md', md: 'xl' }}
-          />
+          {/*// Avatar*/}
+          {user.profilePicture ? (
+            <Avatar
+              name={user.name}
+              src={user.profilePicture}
+              size={{ base: 'md', md: 'xl' }}
+            />
+          ) : (
+            <Avatar
+              name={user.name}
+              src="/noUserAvatar.png"
+              size={{ base: 'md', md: 'xl' }}
+            />
+          )}
         </Box>
       </Flex>
-      <Text>Co-founder, executuve chairman and CEO of Meta plataforms</Text>
+      <Text>{user.bio}</Text>
+
+      {currentUser?._id === user._id && (
+        <RouterLink to="/update">
+          <Button size={'sm'}>Update Profile</Button>
+        </RouterLink>
+      )}
+
+      {currentUser?._id !== user._id && (
+        <Button onClick={handleFollowUnfollow} size={'sm'} isLoading={updating}>
+          {following ? 'unfollow' : 'follow'}
+        </Button>
+      )}
+
       <Flex w={'full'} justifyContent={'space-between'}>
         <Flex gap={2} alignItems={'center'}>
-          <Text color={'gray.light'}>3.2k followers</Text>
+          <Text color={'gray.light'}>{user.followers.length} followers</Text>
           <Box w={1} h={1} bg={'gray.light'} borderRadius={'full'}></Box>
           <Link color={'gray.light'}>instagram.com</Link>
         </Flex>
