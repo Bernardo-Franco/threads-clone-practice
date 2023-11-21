@@ -6,7 +6,6 @@ import HomePage from './pages/HomePage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import UpdateProfilePage from './pages/UpdateProfilePage.jsx';
 import Header from './components/Header.jsx';
-import LogoutButton from './components/LogoutButton.jsx';
 import CreatePost from './components/CreatePost.jsx';
 import { useRecoilValue } from 'recoil';
 import userAtom from './atoms/userAtom.js';
@@ -29,11 +28,21 @@ function App() {
           path="/update"
           element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />}
         />
-        <Route path="/:username" element={<UserPage />} />
+        <Route
+          path="/:username"
+          element={
+            user ? (
+              <>
+                <UserPage />
+                <CreatePost />
+              </>
+            ) : (
+              <UserPage />
+            )
+          }
+        />
         <Route path="/:username/post/:pid" element={<PostPage />} />
       </Routes>
-      {user && <LogoutButton />}
-      {user && <CreatePost />}
     </Container>
   );
 }
