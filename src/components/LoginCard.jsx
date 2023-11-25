@@ -56,6 +56,12 @@ export default function loginCard() {
       setLoading(false);
     }
   };
+  const handleEnter = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLogin(e);
+    } else return;
+  };
   return (
     <Flex align={'center'} justify={'center'}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
@@ -91,6 +97,7 @@ export default function loginCard() {
               <InputGroup>
                 <Input
                   isRequired
+                  onKeyDown={handleEnter}
                   type={showPassword ? 'text' : 'password'}
                   onChange={(e) =>
                     setInputs({ ...inputs, password: e.target.value })
